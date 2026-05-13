@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: emotionsense-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: emotionsense
+    networks:
+      - emotionsense-network
+
+  # Backend - FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: emotionsense-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=emotionsense
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super-secret-key-change-me}
+      - DEBUG=true
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    networks:
+      - emotionsense-network
+
+  # Frontend - Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: emotionsense-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - emotionsense-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  emotionsense-network:
+    driver: bridge
