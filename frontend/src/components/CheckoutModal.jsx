@@ -11,7 +11,7 @@ export default function CheckoutModal({ isOpen, onClose, bouquet, flowers }) {
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const deliveryFee = deliveryOption === 'express' ? 15 : 5;
+  const deliveryFee = deliveryOption === 'express' ? 150 : 50;
   const itemsPrice = flowers ? flowers.reduce((acc, f) => acc + (f.pricePerUnit * f.quantity), 0) : bouquet.totalPrice;
   const finalPrice = itemsPrice + deliveryFee;
 
@@ -70,8 +70,8 @@ export default function CheckoutModal({ isOpen, onClose, bouquet, flowers }) {
               onChange={e => setDeliveryOption(e.target.value)} 
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition bg-slate-50 cursor-pointer"
             >
-              <option value="standard">Standard Delivery (2-3 Days) - $5</option>
-              <option value="express">Express Delivery (Same Day) - $15</option>
+              <option value="standard">Standard Delivery (2-3 Days) - ₹50</option>
+              <option value="express">Express Delivery (Same Day) - ₹150</option>
             </select>
           </div>
         </div>
@@ -79,15 +79,15 @@ export default function CheckoutModal({ isOpen, onClose, bouquet, flowers }) {
         <div className="bg-slate-50 rounded-2xl p-5 mb-8 border border-slate-100">
           <div className="flex justify-between text-slate-500 mb-2 font-medium">
             <span>Bouquet Total</span>
-            <span className="text-slate-800">${itemsPrice.toFixed(2)}</span>
+            <span className="text-slate-800">₹{itemsPrice.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-slate-500 mb-4 font-medium">
             <span>Delivery Fee</span>
-            <span className="text-slate-800">${deliveryFee.toFixed(2)}</span>
+            <span className="text-slate-800">₹{deliveryFee.toFixed(2)}</span>
           </div>
           <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
             <span className="text-lg font-bold text-slate-800">Total</span>
-            <span className="text-3xl font-black text-indigo-600">${finalPrice.toFixed(2)}</span>
+            <span className="text-3xl font-black text-indigo-600">₹{finalPrice.toFixed(2)}</span>
           </div>
         </div>
 

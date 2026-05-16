@@ -14,6 +14,7 @@ import Leaderboard from './components/Leaderboard';
 import Success from './components/Success';
 import AdminLogin from './components/AdminLogin';
 import ChatStylist from './components/ChatStylist';
+import FloralDNA from './components/FloralDNA';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useContext(AuthContext);
@@ -53,6 +54,11 @@ function AppRoutes() {
           <AdminRoute>
             <AdminPanel />
           </AdminRoute>
+        } />
+        <Route path="/floral-dna" element={
+          <PrivateRoute>
+            <FloralDNA />
+          </PrivateRoute>
         } />
       </Routes>
       {user && <ChatStylist />}

@@ -16,13 +16,20 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_123')
 const auth = require('./middleware/auth');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "MOCK_KEY");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_actual_key_here' ? process.env.GEMINI_API_KEY : "MOCK_KEY");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const client = new vision.ImageAnnotatorClient();
+let client = null;
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  try {
+    client = new vision.ImageAnnotatorClient();
+  } catch (err) {
+    console.warn("Could not initialize Vision client:", err.message);
+  }
+}
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/bouquet-scanner')
   .then(() => console.log('Connected to MongoDB'))
@@ -128,7 +135,9 @@ app.post('/scan-image', upload.single('image'), async (req, res) => {
     let detectedNames = [];
     let suggestions = [];
 
-    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MOCK_KEY') {
+    const isMockKey = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_actual_key_here' || process.env.GEMINI_API_KEY === 'MOCK_KEY';
+    
+    if (!isMockKey) {
       try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = `Analyze this floral bouquet image. Return ONLY a JSON object with the following keys:
@@ -148,16 +157,15 @@ app.post('/scan-image', upload.single('image'), async (req, res) => {
         const text = result.response.text().replace(/```json|```/g, '').trim();
         const aiData = JSON.parse(text);
         
-        detectedNames = aiData.detectedNames.map(n => n.toLowerCase());
+        detectedNames = (aiData.detectedNames || []).map(n => n.toLowerCase());
         freshnessScore = aiData.freshnessScore;
         quality = aiData.quality;
         colorPalette = aiData.colors;
       } catch (aiErr) {
         console.error("Gemini Vision Error:", aiErr);
-        // Fallback to labels if vision fails
         detectedNames = ['rose', 'flower', 'petal'];
       }
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    } else if (client) {
       try {
         const [result] = await client.labelDetection(req.file.buffer);
         const labels = result.labelAnnotations || [];
@@ -169,13 +177,22 @@ app.post('/scan-image', upload.single('image'), async (req, res) => {
         suggestions = ['Rose', 'Lily', 'Tulip', 'Flower', 'Plant', 'Petal'];
       }
     } else {
-      console.warn("No AI Credentials found. Using mock AI response.");
+      console.warn("No AI Credentials found. Using enhanced mock AI response.");
       const allFlowers = await Flower.find();
-      // Randomly pick 1-3 flowers from DB for a more dynamic mock experience
-      const shuffled = [...allFlowers].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, Math.floor(Math.random() * 2) + 1);
       
-      detectedNames = selected.map(f => f.name.toLowerCase());
+      // Try to "detect" based on filename if possible (useful for user testing)
+      const fileName = req.file.originalname?.toLowerCase() || "";
+      let matchedMock = allFlowers.filter(f => fileName.includes(f.name.toLowerCase()));
+      
+      if (matchedMock.length > 0) {
+        detectedNames = matchedMock.map(f => f.name.toLowerCase());
+      } else {
+        // Fallback to random if no filename match
+        const shuffled = [...allFlowers].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, Math.floor(Math.random() * 2) + 1);
+        detectedNames = selected.map(f => f.name.toLowerCase());
+      }
+      
       suggestions = allFlowers.map(f => f.name).slice(0, 8);
     }
     
@@ -279,7 +296,7 @@ app.post('/api/checkout', auth, async (req, res) => {
       calculatedPrice += f.price * item.quantity;
     }
 
-    const deliveryFee = deliveryOption === 'express' ? 15 : 5;
+    const deliveryFee = deliveryOption === 'express' ? 150 : 50;
     calculatedPrice += deliveryFee;
 
     const order = new Order({
@@ -293,13 +310,14 @@ app.post('/api/checkout', auth, async (req, res) => {
     });
     
     await order.save();
+    console.log(`Order created: ${order._id} for user ${req.user.id}`);
 
     if (process.env.STRIPE_SECRET_KEY) {
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{
           price_data: {
-            currency: 'usd',
+            currency: 'inr',
             product_data: { name: 'Custom Bouquet' },
             unit_amount: Math.round(calculatedPrice * 100),
           },
@@ -324,6 +342,9 @@ app.post('/api/checkout', auth, async (req, res) => {
 app.post('/api/checkout/success', auth, async (req, res) => {
   try {
     const { orderId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+       return res.status(400).json({ error: 'Invalid Order ID' });
+    }
     const order = await Order.findOne({ _id: orderId, userId: req.user.id });
     if (!order) return res.status(404).json({ error: 'Order not found' });
     
@@ -362,7 +383,7 @@ const adminAuth = async (req, res, next) => {
   }
 };
 
-app.post('/api/crowdsource', auth, adminAuth, upload.single('image'), async (req, res) => {
+app.post('/api/crowdsource', auth, upload.single('image'), async (req, res) => {
   try {
     const { name, proposedPrice } = req.body;
     const entry = new Crowdsource({
@@ -381,7 +402,7 @@ app.post('/api/crowdsource', auth, adminAuth, upload.single('image'), async (req
 app.post('/api/chat', async (req, res) => {
   const { message, context } = req.body;
   try {
-    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MOCK_KEY') {
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MOCK_KEY' && !process.env.GEMINI_API_KEY.includes('your_actual_key')) {
        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
        const flowerContext = context && context.length > 0 
           ? `The user is currently looking at a bouquet containing: ${context.map(f => `${f.quantity}x ${f.name}`).join(', ')}.`
@@ -414,6 +435,162 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+app.post('/api/care-guide', async (req, res) => {
+  const { flowers } = req.body;
+  try {
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MOCK_KEY' && !process.env.GEMINI_API_KEY.includes('your_actual_key')) {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const flowerList = flowers.map(f => f.name).join(', ');
+      
+      const prompt = `Provide a professional, concise flower care guide for a bouquet containing: ${flowerList}.
+      Include:
+      1. Watering instructions.
+      2. Sunlight and temperature needs.
+      3. A "Stylist Tip" for longevity.
+      Return the response in a clean, bulleted format suitable for a premium app.`;
+      
+      const result = await model.generateContent(prompt);
+      res.json({ guide: result.response.text() });
+    } else {
+      res.json({ guide: "• Keep the water fresh and change it every 2 days.\n• Trim stems at a 45-degree angle.\n• Keep away from direct sunlight and ripening fruit.\n• **Stylist Tip:** Add a tiny drop of bleach to the water to keep bacteria at bay!" });
+    }
+  } catch (err) {
+    console.error("Care Guide Error:", err);
+    res.status(500).json({ error: "Failed to generate care guide." });
+  }
+});
+
+app.post('/api/flower-language', async (req, res) => {
+  const { flowers, occasion } = req.body;
+  try {
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_actual_key_here' && process.env.GEMINI_API_KEY !== 'MOCK_KEY') {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const flowerList = flowers.map(f => f.name).join(', ');
+      
+      const prompt = `You are an expert in Floriography (the language of flowers). 
+      Analyze this bouquet: ${flowerList}.
+      ${occasion ? `The occasion is: ${occasion}.` : ""}
+      
+      Provide:
+      1. The symbolic meaning of each flower.
+      2. The overall emotional message this bouquet conveys.
+      3. A "Sentiment Score" (0-100) for how well it fits the occasion.
+      Keep the tone elegant, poetic, and professional. Return in a clean format.`;
+      
+      const result = await model.generateContent(prompt);
+      res.json({ analysis: result.response.text() });
+    } else {
+      // Enhanced Mock for Flower Language
+      const meanings = {
+        'Rose': 'Love and passion',
+        'Lily': 'Purity and rebirth',
+        'Tulip': 'Perfect love',
+        'Sunflower': 'Adoration and loyalty',
+        'Daisy': 'Innocence and new beginnings'
+      };
+      const analysis = flowers.map(f => `• **${f.name}**: ${meanings[f.name] || 'Symbolizes beauty and nature'}`).join('\n');
+      res.json({ analysis: `### The Language of Your Bouquet\n\n${analysis}\n\n**Overall Message:** This arrangement speaks of deep appreciation and refined elegance. It is perfect for expressing heartfelt emotions.` });
+    }
+  } catch (err) {
+    console.error("Flower Language Error:", err);
+    res.status(500).json({ error: "Failed to analyze flower language." });
+  }
+});
+
+app.get('/api/floral-dna', auth, async (req, res) => {
+  try {
+    const bouquets = await Bouquet.find({ userId: req.user.id });
+    const orders = await Order.find({ userId: req.user.id });
+    
+    if (bouquets.length === 0 && orders.length === 0) {
+      return res.json({ 
+        dna: "Your Floral DNA is still forming! Scan or order more bouquets to reveal your style.",
+        persona: "The Budding Enthusiast",
+        stats: { colors: [], flowers: [] }
+      });
+    }
+
+    // Aggregate data for AI
+    const flowerCounts = {};
+    const colors = [];
+    bouquets.forEach(b => {
+      b.flowers.forEach(f => {
+        flowerCounts[f.name] = (flowerCounts[f.name] || 0) + f.quantity;
+      });
+    });
+
+    const topFlowers = Object.keys(flowerCounts).sort((a,b) => flowerCounts[b] - flowerCounts[a]).slice(0, 5);
+    
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_actual_key_here' && process.env.GEMINI_API_KEY !== 'MOCK_KEY') {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `Based on a user's flower preferences: ${topFlowers.join(', ')}.
+      Create a "Floral DNA Profile" for them.
+      Include:
+      1. A "Floral Persona" name (e.g., "The Avant-Garde Romantic", "The Sun-Drenched Minimalist").
+      2. A 2-sentence description of their style.
+      3. A recommended weekly subscription bouquet theme.
+      Return as a clean JSON-like summary.`;
+      
+      const result = await model.generateContent(prompt);
+      res.json({ 
+        dna: result.response.text(),
+        persona: topFlowers.includes('Rose') ? 'The Classic Romantic' : 'The Modern Stylist',
+        stats: { topFlowers }
+      });
+    } else {
+      // Mock DNA
+      res.json({
+        dna: `Based on your love for ${topFlowers.join(' and ')}, you appreciate refined structures and vibrant textures. Your subscription would focus on seasonally curated stems that highlight these favorites.`,
+        persona: topFlowers.includes('Rose') ? 'The Timeless Romantic' : 'The Contemporary Curator',
+        stats: { topFlowers }
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/budget-optimize', async (req, res) => {
+  const { flowers, targetBudget } = req.body;
+  try {
+    const allFlowers = await Flower.find({});
+    
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_actual_key_here' && process.env.GEMINI_API_KEY !== 'MOCK_KEY') {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const currentTotal = flowers.reduce((acc, f) => acc + (f.pricePerUnit * f.quantity), 0);
+      
+      const prompt = `Current Bouquet: ${flowers.map(f => `${f.quantity}x ${f.name} (@₹${f.pricePerUnit})`).join(', ')}.
+      Total Price: ₹${currentTotal}.
+      Target Budget: ₹${targetBudget}.
+      Available Flower Catalog: ${allFlowers.map(f => `${f.name} (₹${f.price})`).join(', ')}.
+      
+      Provide a "Budget Optimization Plan":
+      1. Suggest which flowers to remove or reduce in quantity.
+      2. Suggest cheaper "Swap Alternatives" from the catalog that maintain a similar visual style.
+      3. Calculate the new estimated total.
+      Keep it professional and helpful. Return as a clean summary.`;
+      
+      const result = await model.generateContent(prompt);
+      res.json({ plan: result.response.text() });
+    } else {
+      // Mock Optimizer
+      const currentTotal = flowers.reduce((acc, f) => acc + (f.pricePerUnit * f.quantity), 0);
+      const diff = currentTotal - targetBudget;
+      
+      let mockPlan = `### Budget Optimization Plan (Target: ₹${targetBudget})\n\n`;
+      mockPlan += `Your current total is **₹${currentTotal.toFixed(2)}**. To save **₹${diff.toFixed(2)}**, we suggest:\n\n`;
+      mockPlan += `1. **Reduce Quantities**: Reducing the count of your most expensive flowers by 20%.\n`;
+      mockPlan += `2. **Smart Swap**: Swap **Peonies** for **Roses** or **Carnations** to keep the "full" look at a lower cost.\n`;
+      mockPlan += `3. **Filler Strategy**: Add more **Daisies** or **Baby's Breath** to maintain volume while lowering the average stem price.\n\n`;
+      mockPlan += `**Estimated New Total: ₹${(targetBudget * 1.05).toFixed(2)}**`;
+      
+      res.json({ plan: mockPlan });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/admin/crowdsource', auth, adminAuth, async (req, res) => {
   try {
     // Excluding the buffer from json response to save bandwidth
@@ -435,13 +612,17 @@ app.post('/api/admin/crowdsource/:id/approve', auth, adminAuth, async (req, res)
     
     // Auto-learning: Immediately add to Flower DB after "training" is complete
     setTimeout(async () => {
-      entry.status = 'approved';
-      await entry.save();
-      await Flower.findOneAndUpdate(
-        { name: entry.name }, 
-        { name: entry.name, price: entry.proposedPrice }, 
-        { upsert: true }
-      );
+      try {
+        entry.status = 'approved';
+        await entry.save();
+        await Flower.findOneAndUpdate(
+          { name: entry.name }, 
+          { name: entry.name, price: entry.proposedPrice }, 
+          { upsert: true }
+        );
+      } catch (err) {
+        console.error("Delayed Approval Error:", err);
+      }
     }, 2000); // 2 second simulated training
 
     res.json({ success: true, msg: 'Entry approved, AI training started' });
