@@ -33,6 +33,22 @@ async def login(data: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     print(f"DEBUG: Login successful for user: {data.email}")
+    now = datetime.utcnow().isoformat()
+    
+    # Update last login on user
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"last_login": now}}
+    )
+    
+    # Save to login history
+    await db.login_history.insert_one({
+        "user_id": str(user["_id"]),
+        "email": user["email"],
+        "timestamp": now,
+        "status": "success"
+    })
+    
     token = create_access_token({"sub": str(user["_id"]), "email": user["email"]})
     return {
         "access_token": token,
@@ -43,6 +59,7 @@ async def login(data: LoginRequest):
             "email": user["email"],
             "role": user.get("role", "user"),
             "createdAt": user.get("created_at", ""),
+            "lastLogin": now,
         },
     }
 

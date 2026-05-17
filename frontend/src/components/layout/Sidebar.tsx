@@ -142,9 +142,10 @@ export default function Sidebar() {
               System
             </p>
           )}
-          {adminItems.map((item) => (
-            <NavLink key={item.href} item={item} />
-          ))}
+          {adminItems.map((item) => {
+            if (item.label === "Admin Panel" && user?.role !== "admin") return null;
+            return <NavLink key={item.href} item={item} />;
+          })}
         </div>
       </nav>
 
