@@ -286,12 +286,11 @@ npm run build
 # Deploy via Vercel CLI or GitHub integration
 ```
 
-### Full Stack -> Render
+### Backend -> Render
 
-This repo includes a `render.yaml` Blueprint for deploying both services on Render:
+This repo includes a `render.yaml` Blueprint for deploying the FastAPI backend on Render:
 
 - `emotionsense-backend`: FastAPI Docker web service
-- `emotionsense-frontend`: Next.js Docker web service
 
 Create a MongoDB Atlas database first, then create a Render Blueprint from this GitHub repo and set:
 
@@ -299,7 +298,7 @@ Create a MongoDB Atlas database first, then create a Render Blueprint from this 
 MONGODB_URL=<your MongoDB Atlas connection string>
 ```
 
-Render generates `JWT_SECRET_KEY` automatically. The frontend calls `/api/v1/*` on its own host and proxies requests to the backend over Render's internal network.
+Render generates `JWT_SECRET_KEY` automatically. If you deploy the frontend separately, set `NEXT_PUBLIC_API_URL` to the backend's Render URL.
 
 ### Backend → Railway/Render
 ```bash
