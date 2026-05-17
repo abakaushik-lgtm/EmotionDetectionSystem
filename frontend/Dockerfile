@@ -3,10 +3,11 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm ci
 
 COPY . .
+RUN npm run build
 
-EXPOSE 3000
+EXPOSE 10000
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npm run start -- --hostname 0.0.0.0 --port ${PORT:-10000}"]

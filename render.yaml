@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: emotionsense-backend
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: DEBUG
+        value: false
+      - key: DATABASE_NAME
+        value: emotionsense
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: MONGODB_URL
+        sync: false
+
+  - type: web
+    name: emotionsense-frontend
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /
+    autoDeployTrigger: commit
+    envVars:
+      - key: BACKEND_HOSTPORT
+        fromService:
+          type: web
+          name: emotionsense-backend
+          property: hostport
