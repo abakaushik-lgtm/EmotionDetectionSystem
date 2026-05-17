@@ -29,7 +29,7 @@ async def detect_fusion(data: FusionRequest, user=Depends(get_current_user)):
         "confidence": result["final_confidence"],
         "modalities": result["modalities"],
         "weights": result["weights"],
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.utcnow(),
     })
 
     return result

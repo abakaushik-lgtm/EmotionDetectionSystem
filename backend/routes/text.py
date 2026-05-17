@@ -24,7 +24,7 @@ async def detect_text_emotion(data: TextRequest, user=Depends(get_current_user))
         "sentiment_score": result["sentiment_score"],
         "all_emotions": result["all_emotions"],
         "text_preview": data.text[:100],
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.utcnow(),
     })
 
     return result

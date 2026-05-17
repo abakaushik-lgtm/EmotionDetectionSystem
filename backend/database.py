@@ -23,7 +23,10 @@ async def connect_db():
         # Try a quick ping to see if server is alive
         await client.admin.command('ping')
         db = client[settings.DATABASE_NAME]
-        print(f"Connected to MongoDB: {settings.DATABASE_NAME}")
+        # Set up compound indexes for optimized history lookups and dashboard distributions
+        await db.detections.create_index([("user_id", 1), ("created_at", -1)])
+        await db.detections.create_index([("user_id", 1), ("type", 1)])
+        print(f"Connected to MongoDB: {settings.DATABASE_NAME} (Indexes configured)")
     except Exception as e:
         print(f"Could not connect to MongoDB: {e}")
         print("Using mock database for demo mode")

@@ -19,7 +19,7 @@ async def detect_face_emotion(file: UploadFile = File(...), user=Depends(get_cur
         "emotion": result["emotion"],
         "confidence": result["confidence"],
         "all_emotions": result["all_emotions"],
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.utcnow(),
     })
 
     return result

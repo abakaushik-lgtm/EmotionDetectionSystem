@@ -31,7 +31,7 @@ async def get_history(
 async def get_trends(period: str, user=Depends(get_current_user)):
     db = get_db()
     days = {"7d": 7, "30d": 30, "90d": 90, "1y": 365}.get(period, 30)
-    since = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    since = datetime.utcnow() - timedelta(days=days)
 
     pipeline = [
         {"$match": {"user_id": user["id"], "created_at": {"$gte": since}}},
@@ -66,7 +66,7 @@ async def get_distribution(user=Depends(get_current_user)):
 @router.get("/weekly-report")
 async def get_weekly_report(user=Depends(get_current_user)):
     db = get_db()
-    since = (datetime.utcnow() - timedelta(days=7)).isoformat()
+    since = datetime.utcnow() - timedelta(days=7)
     total = await db.detections.count_documents({"user_id": user["id"], "created_at": {"$gte": since}})
 
     pipeline = [
@@ -97,3 +97,47 @@ async def get_insights(user=Depends(get_current_user)):
             "Maintain a gratitude journal",
         ],
     }
+
+@router.post("/seed-mock-data")
+async def seed_mock_data(user=Depends(get_current_user)):
+    import random
+    db = get_db()
+    user_id = user["id"]
+    
+    # Delete existing detections to start fresh
+    await db.detections.delete_many({"user_id": user_id})
+    
+    emotions = ["happy", "sad", "angry", "surprised", "neutral", "fear", "disgust"]
+    sources = ["face", "text", "audio", "fusion"]
+    
+    docs = []
+    now = datetime.utcnow()
+    
+    # Generate ~250 random detections over the past 30 days
+    for _ in range(250):
+        days_ago = random.uniform(0, 30)
+        timestamp = now - timedelta(days=days_ago)
+        
+        # Weigh emotions to make trends somewhat realistic
+        if days_ago < 7:
+            # More happy recently
+            emotion = random.choices(emotions, weights=[0.4, 0.1, 0.1, 0.1, 0.2, 0.05, 0.05])[0]
+        else:
+            # More neutral/stress before
+            emotion = random.choices(emotions, weights=[0.2, 0.2, 0.15, 0.05, 0.3, 0.05, 0.05])[0]
+            
+        doc = {
+            "user_id": user_id,
+            "type": random.choice(sources),
+            "emotion": emotion,
+            "confidence": round(random.uniform(0.65, 0.99), 2),
+            "created_at": timestamp,  # Native BSON Date object
+            "details": {
+                "source": "Seeded data for dashboard demonstration"
+            }
+        }
+        docs.append(doc)
+        
+    await db.detections.insert_many(docs)
+    return {"status": "success", "message": f"Successfully seeded {len(docs)} records for user {user_id}."}
+
