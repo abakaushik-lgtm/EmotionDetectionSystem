@@ -208,7 +208,7 @@ export default function LandingPage() {
 
         {/* Floating emotion badges */}
         <div className="relative w-full max-w-4xl h-20 mt-16">
-          {["😊 Happy", "😢 Sad", "😠 Angry", "😨 Fear", "😲 Surprise", "🤩 Excited"].map(
+          {[" Happy", " Sad", " Angry", " Fear", " Surprise", " Excited"].map(
             (emoji, i) => (
               <motion.div
                 key={emoji}
@@ -412,7 +412,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6">
             <span className="text-xs text-muted-foreground">
-              © 2025 EmotionSense AI. All rights reserved.
+               2025 EmotionSense AI. All rights reserved.
             </span>
           </div>
           <div className="flex items-center gap-4">

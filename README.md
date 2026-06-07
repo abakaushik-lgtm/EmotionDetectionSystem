@@ -1,4 +1,4 @@
-# 🧠 EmotionSense AI
+#  EmotionSense AI
 
 ### Advanced Multimodal Emotion Detection Platform
 
@@ -14,26 +14,26 @@
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🎭 Multimodal Emotion Detection
+###  Multimodal Emotion Detection
 - **Face Detection** — Real-time webcam analysis with CNN-powered facial expression recognition
 - **Audio Analysis** — Voice tone and emotion detection using MFCC feature extraction
 - **Text Analysis** — NLP-powered emotion detection using HuggingFace transformers
 - **AI Fusion** — Weighted ensemble combining all modalities for superior accuracy
 
-### 📊 Analytics & Insights
+###  Analytics & Insights
 - Emotion history tracking and mood trends
 - Interactive charts, heatmaps, and weekly reports
 - AI-generated mental wellness insights
 - Personalized recommendations
 
-### 🛡️ Admin Panel
+###  Admin Panel
 - User management dashboard
 - System-wide detection statistics
 - Role-based access control
 
-### 🎨 Premium UI/UX
+###  Premium UI/UX
 - Cyberpunk-inspired glassmorphism design
 - Dark/light mode support
 - Framer Motion animations
@@ -41,7 +41,7 @@
 
 ---
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 | Layer | Technologies |
 |-------|-------------|
@@ -55,7 +55,7 @@
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 EmotionSenseAI/
@@ -130,7 +130,7 @@ EmotionSenseAI/
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -187,7 +187,7 @@ npm run dev
 
 ---
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 ### Authentication
 | Method | Endpoint | Description |
@@ -225,24 +225,24 @@ npm run dev
 
 ---
 
-## 🎭 Detected Emotions
+##  Detected Emotions
 
 | Emotion | Color | Icon |
 |---------|-------|------|
-| Happy | 🟡 #facc15 | 😊 |
-| Sad | 🔵 #3b82f6 | 😢 |
-| Angry | 🔴 #ef4444 | 😠 |
-| Fear | 🟣 #a855f7 | 😨 |
-| Surprise | 🟠 #f97316 | 😲 |
-| Neutral | ⚪ #6b7280 | 😐 |
-| Disgust | 🟢 #22c55e | 🤢 |
-| Anxiety | 💜 #8b5cf6 | 😰 |
-| Stress | 🩷 #f43f5e | 😫 |
-| Excited | 🩵 #06b6d4 | 🤩 |
+| Happy |  #facc15 |  |
+| Sad |  #3b82f6 |  |
+| Angry |  #ef4444 |  |
+| Fear |  #a855f7 |  |
+| Surprise |  #f97316 |  |
+| Neutral |  #6b7280 |  |
+| Disgust |  #22c55e |  |
+| Anxiety |  #8b5cf6 |  |
+| Stress |  #f43f5e |  |
+| Excited |  #06b6d4 |  |
 
 ---
 
-## 🧪 AI Models
+##  AI Models
 
 ### Face Emotion Detection
 - **Primary**: DeepFace with OpenCV backend
@@ -267,7 +267,7 @@ npm run dev
 
 ---
 
-## 🔒 Security
+##  Security
 
 - JWT-based authentication with bcrypt password hashing
 - Role-based access control (user/admin)
@@ -277,7 +277,7 @@ npm run dev
 
 ---
 
-## 📦 Deployment
+##  Deployment
 
 ### Frontend → Vercel
 ```bash
@@ -312,13 +312,13 @@ Render generates `JWT_SECRET_KEY` automatically. If you deploy the frontend sepa
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License.
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - [DeepFace](https://github.com/serengil/deepface) — Face analysis framework
 - [HuggingFace Transformers](https://huggingface.co/) — NLP models
@@ -328,4 +328,4 @@ This project is licensed under the MIT License.
 
 ---
 
-Built with ❤️ by EmotionSense AI Team
+Built with  by EmotionSense AI Team

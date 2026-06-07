@@ -19,16 +19,16 @@ export const EMOTION_COLORS: Record<string, string> = {
 };
 
 export const EMOTION_ICONS: Record<string, string> = {
-  happy: "😊",
-  sad: "😢",
-  angry: "😠",
-  fear: "😨",
-  surprise: "😲",
-  neutral: "😐",
-  disgust: "🤢",
-  anxiety: "😰",
-  stress: "😫",
-  excited: "🤩",
+  happy: "",
+  sad: "",
+  angry: "",
+  fear: "",
+  surprise: "",
+  neutral: "",
+  disgust: "",
+  anxiety: "",
+  stress: "",
+  excited: "",
 };
 
 export function formatPercentage(value: number): string {

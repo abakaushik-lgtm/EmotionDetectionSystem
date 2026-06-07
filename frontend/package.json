@@ -1,6 +1,7 @@
 {
   "name": "emotionsense-ai",
   "version": "1.0.0",
+  "description": "AI-powered platform for real-time emotion detection through facial expressions, voice analysis, and text sentiment.",
   "private": true,
   "scripts": {
     "dev": "next dev",
