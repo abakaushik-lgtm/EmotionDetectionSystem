@@ -1,6 +1,6 @@
 #  EmotionSense AI
 
-### Advanced Multimodal Emotion Detection Platform
+### Advanced Multimodal Emotion Detection Platform.
 
 > AI-powered platform for real-time emotion detection through facial expressions, voice analysis, and text sentiment using cutting-edge deep learning models.
 
