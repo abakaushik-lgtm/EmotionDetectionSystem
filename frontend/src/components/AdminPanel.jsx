@@ -16,7 +16,7 @@ export default function AdminPanel() {
 
   const fetchEntries = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/crowdsource', {
+      const res = await axios.get('/api/admin/crowdsource', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEntries(res.data);
@@ -31,7 +31,7 @@ export default function AdminPanel() {
     setEntries(prev => prev.map(e => e._id === id ? { ...e, status: 'training' } : e));
     
     try {
-      await axios.post(`http://localhost:5000/api/admin/crowdsource/${id}/approve`, {}, {
+      await axios.post(`/api/admin/crowdsource/${id}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTimeout(() => {
@@ -46,7 +46,7 @@ export default function AdminPanel() {
 
   const handleReject = async (id) => {
     try {
-      await axios.post(`http://localhost:5000/api/admin/crowdsource/${id}/reject`, {}, {
+      await axios.post(`/api/admin/crowdsource/${id}/reject`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEntries(prev => prev.filter(e => e._id !== id));

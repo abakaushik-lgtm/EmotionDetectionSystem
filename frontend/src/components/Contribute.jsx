@@ -28,7 +28,7 @@ export default function Contribute() {
     formData.append('proposedPrice', price);
 
     try {
-      await axios.post('http://localhost:5000/api/crowdsource', formData, {
+      await axios.post('/api/crowdsource', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Flower submitted! It is now pending Admin approval & AI Training.');

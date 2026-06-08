@@ -13,7 +13,7 @@ export default function Success() {
   useEffect(() => {
     const completeOrder = async () => {
       try {
-        await axios.post('http://localhost:5000/api/checkout/success', { orderId });
+        await axios.post('/api/checkout/success', { orderId });
         setStatus('success');
       } catch (err) {
         setStatus('error');

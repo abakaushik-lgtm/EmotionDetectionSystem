@@ -19,8 +19,23 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_actual_key_here' ? process.env.GEMINI_API_KEY : "MOCK_KEY");
 
 const app = express();
-app.use(cors());
+const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(origin => origin.trim()).filter(Boolean);
+const primaryFrontendUrl = frontendUrls[0] || 'http://localhost:5173';
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || frontendUrls.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true
+}));
 app.use(express.json());
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
 
 let client = null;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -324,8 +339,8 @@ app.post('/api/checkout', auth, async (req, res) => {
           quantity: 1,
         }],
         mode: 'payment',
-        success_url: `http://localhost:5173/success?orderId=${order._id}`,
-        cancel_url: `http://localhost:5173/gallery`,
+        success_url: `${primaryFrontendUrl}/success?orderId=${order._id}`,
+        cancel_url: `${primaryFrontendUrl}/gallery`,
       });
       order.stripeSessionId = session.id;
       await order.save();

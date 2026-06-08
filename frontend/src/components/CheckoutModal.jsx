@@ -25,7 +25,7 @@ export default function CheckoutModal({ isOpen, onClose, bouquet, flowers }) {
         deliveryOption,
         deliveryAddress: address
       };
-      const res = await axios.post('http://localhost:5000/api/checkout', payload);
+      const res = await axios.post('/api/checkout', payload);
       window.location.href = res.data.url; // Redirect to Stripe / Success mock
     } catch (err) {
       console.error(err);

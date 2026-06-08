@@ -51,7 +51,7 @@ export default function Scanner() {
 
   const fetchKnownFlowers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/flowers');
+      const res = await axios.get('/flowers');
       setKnownFlowers(res.data);
     } catch (err) {
       console.error(err);
@@ -149,7 +149,7 @@ export default function Scanner() {
     formData.append('image', imageFile);
 
     try {
-      const res = await axios.post('http://localhost:5000/scan-image', formData, {
+      const res = await axios.post('/scan-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setFlowers(res.data.matchedFlowers || []);
@@ -172,7 +172,7 @@ export default function Scanner() {
     if (flowers.length === 0) return;
     setIsLoadingCare(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/care-guide', { flowers });
+      const res = await axios.post('/api/care-guide', { flowers });
       setCareGuide(res.data.guide);
     } catch (err) {
       console.error(err);
@@ -185,7 +185,7 @@ export default function Scanner() {
     if (flowers.length === 0) return;
     setIsLoadingSymbolism(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/flower-language', { flowers, occasion });
+      const res = await axios.post('/api/flower-language', { flowers, occasion });
       setSymbolism(res.data.analysis);
     } catch (err) {
       console.error(err);
@@ -198,7 +198,7 @@ export default function Scanner() {
     if (!targetBudget || flowers.length === 0) return;
     setIsOptimizing(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/budget-optimize', { flowers, targetBudget: Number(targetBudget) });
+      const res = await axios.post('/api/budget-optimize', { flowers, targetBudget: Number(targetBudget) });
       setOptimizationPlan(res.data.plan);
     } catch (err) {
       console.error(err);
@@ -256,7 +256,7 @@ export default function Scanner() {
       return;
     }
     try {
-      await axios.post('http://localhost:5000/save-bouquet', {
+      await axios.post('/save-bouquet', {
         flowers,
         totalPrice
       });

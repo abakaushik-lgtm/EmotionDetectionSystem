@@ -9,7 +9,7 @@ export default function FloralDNA() {
   useEffect(() => {
     const fetchDNA = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/floral-dna');
+        const res = await axios.get('/api/floral-dna');
         setDnaData(res.data);
       } catch (err) {
         console.error(err);

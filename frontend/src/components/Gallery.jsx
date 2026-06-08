@@ -14,7 +14,7 @@ export default function Gallery() {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/gallery');
+        const res = await axios.get('/api/gallery');
         setBouquets(res.data);
       } catch (err) {
         console.error(err);

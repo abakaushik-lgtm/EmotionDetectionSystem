@@ -13,7 +13,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchBouquets = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/my-bouquets');
+        const res = await axios.get('/my-bouquets');
         setBouquets(res.data);
       } catch (err) {
         console.error(err);
